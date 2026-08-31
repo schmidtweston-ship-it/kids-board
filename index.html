@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#12110e">
+  <meta name="color-scheme" content="dark">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="The kids">
+  <meta name="description" content="House board. You look. You mark it. Stays on this phone.">
+  <title>The kids</title>
+  <!-- kids-board-v1 -->
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <style>
+    :root {
+      --bg: #12110e;
+      --fg: #f4efe6;
+      --mute: #9a9488;
+      --line: #2c2a26;
+      --chip: #1c1b18;
+      --amber: #e2a636;
+      --ok: #7ea37a;
+      --hurt: #d4785a;
+      --pad: max(1.05rem, env(safe-area-inset-left));
+      --pad-r: max(1.05rem, env(safe-area-inset-right));
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+    body {
+      min-height: 100dvh;
+      max-width: 28rem;
+      margin: 0 auto;
+    }
+    button, input, textarea, a {
+      font: inherit;
+      color: inherit;
+    }
+    button {
+      appearance: none;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      color: var(--fg);
+      border-radius: 0.45rem;
+      min-height: 2.8rem;
+      padding: 0.45rem 0.8rem;
+      font-weight: 700;
+      -webkit-tap-highlight-color: transparent;
+    }
+    button:active { filter: brightness(1.15); }
+    h1, h2, p { margin: 0; }
+    .screen { padding: max(0.7rem, env(safe-area-inset-top)) var(--pad-r) max(2.2rem, env(safe-area-inset-bottom)) var(--pad); }
+    .screen[hidden] { display: none; }
+
+    .kicker {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .title {
+      margin-top: 0.15rem;
+      font-size: clamp(2rem, 9vw, 2.55rem);
+      font-weight: 800;
+      letter-spacing: -0.045em;
+      line-height: 1.02;
+    }
+    .date {
+      margin-top: 0.25rem;
+      font-size: 1.08rem;
+      font-weight: 650;
+      color: var(--mute);
+    }
+    .banner {
+      margin: 0.85rem 0 0.95rem;
+      padding: 0.5rem 0.65rem;
+      border: 1px dashed var(--amber);
+      color: var(--amber);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      line-height: 1.35;
+    }
+    .banner[hidden] { display: none; }
+
+    .door-wrap { text-align: center; padding-top: 1.4rem; }
+    .door-title {
+      font-size: clamp(2rem, 9vw, 2.4rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+    .door-hint {
+      margin-top: 0.45rem;
+      color: var(--mute);
+      font-size: 1.15rem;
+      font-weight: 650;
+    }
+    .pin-dots {
+      font-size: 2rem;
+      letter-spacing: 0.35em;
+      min-height: 2.2rem;
+      margin: 0.7rem 0 0.85rem;
+      font-weight: 800;
+    }
+    .err {
+      color: var(--hurt);
+      font-weight: 800;
+      margin: 0 0 0.7rem;
+    }
+    .err[hidden] { display: none; }
+    .pad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.7rem;
+      max-width: 22rem;
+      margin: 0 auto;
+    }
+    .pad-btn {
+      min-height: 4.6rem;
+      border: 0;
+      border-radius: 1rem;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      font-size: 1.85rem;
+      font-weight: 800;
+    }
+    .pad-btn:active { background: #26241f; }
+    .pad-go { background: var(--amber); color: var(--bg); border-color: var(--amber); font-size: 1.25rem; }
+    .pad-del { font-size: 1.45rem; color: var(--mute); }
+    .shake { animation: shake 0.35s; }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .kid-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.7rem;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      border-bottom: 1px solid var(--line);
+      border-radius: 0;
+      padding: 0.95rem 0;
+      min-height: 5.2rem;
+    }
+    .kid-row:first-of-type { border-top: 1px solid var(--line); margin-top: 1.1rem; }
+    .kid-name {
+      font-size: clamp(1.85rem, 8vw, 2.35rem);
+      font-weight: 800;
+      letter-spacing: -0.045em;
+      line-height: 1.02;
+    }
+    .kid-name em {
+      font-style: normal;
+      color: var(--mute);
+      font-size: 0.62em;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-left: 0.25rem;
+    }
+    .kid-status {
+      flex: 0 0 auto;
+      font-size: 0.92rem;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      color: var(--mute);
+      text-align: right;
+    }
+    .kid-status.looked { color: var(--ok); }
+    .kid-status.partial { color: var(--amber); }
+    .kid-status.none { color: var(--hurt); }
+
+    .block {
+      margin: 1.25rem 0 0;
+      padding: 0.85rem 0 0.2rem;
+      border-top: 1px solid var(--line);
+    }
+    .block-head {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--mute);
+      margin-bottom: 0.35rem;
+    }
+
+    .check-hit {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      border-radius: 0;
+      padding: 0.35rem 0;
+      min-height: 3.4rem;
+    }
+    .box {
+      flex: 0 0 2.75rem;
+      width: 2.75rem;
+      height: 2.75rem;
+      margin-top: 0.08rem;
+      border: 2px solid var(--mute);
+      border-radius: 0.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.7rem;
+      font-weight: 800;
+      line-height: 1;
+      color: transparent;
+      background: transparent;
+    }
+    .checked .box, .check-hit[aria-pressed="true"] .box {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: var(--bg);
+    }
+    .check-copy { min-width: 0; flex: 1; }
+    .check-title {
+      font-size: clamp(1.45rem, 6.4vw, 1.85rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+    }
+    .check-meta {
+      margin-top: 0.15rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--mute);
+    }
+
+    .note, .handle, .how, .composer {
+      width: 100%;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      border-radius: 0.4rem;
+      padding: 0.7rem 0.75rem;
+      font-size: 16px;
+      font-weight: 650;
+    }
+    .note { min-height: 3.4rem; resize: vertical; margin: 0.55rem 0 0.5rem; }
+    .composer { min-height: 5.4rem; resize: vertical; margin: 0.55rem 0 0.55rem; }
+    .how { margin-top: 0.35rem; }
+
+    .link-out {
+      display: inline-block;
+      color: var(--amber);
+      font-weight: 800;
+      font-size: 0.95rem;
+      padding: 0.45rem 0;
+      text-decoration: none;
+      border-bottom: 1px solid var(--amber);
+    }
+
+    .giant {
+      display: block;
+      width: 100%;
+      min-height: 4.4rem;
+      margin-top: 1.1rem;
+      background: var(--amber);
+      color: var(--bg);
+      border: 0;
+      border-radius: 0.85rem;
+      font-size: 1.45rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .tiny {
+      display: block;
+      margin: 0.85rem auto 0;
+      background: none;
+      border: 0;
+      color: var(--mute);
+      font-size: 0.88rem;
+      font-weight: 700;
+      text-decoration: underline;
+      min-height: 2.2rem;
+    }
+    .back {
+      display: inline-block;
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--fg);
+      border-radius: 0.7rem;
+      min-height: 2.7rem;
+      padding: 0.35rem 0.85rem;
+      font-size: 1rem;
+      font-weight: 800;
+      margin-bottom: 0.7rem;
+    }
+    .foot {
+      margin-top: 1.4rem;
+      padding-top: 0.9rem;
+      border-top: 1px solid var(--line);
+      font-size: 0.8rem;
+      color: var(--mute);
+      line-height: 1.45;
+    }
+
+    .plat {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      grid-template-areas: "box name open" "box handle handle";
+      gap: 0.35rem 0.7rem;
+      align-items: center;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .plat .check-hit {
+      grid-area: box;
+      width: auto;
+      padding: 0;
+      min-height: 2.75rem;
+    }
+    .plat .plat-name {
+      grid-area: name;
+      font-size: clamp(1.35rem, 5.8vw, 1.7rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .plat .handle { grid-area: handle; }
+    .plat .open {
+      grid-area: open;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      border-radius: 0.4rem;
+      min-height: 2.4rem;
+      padding: 0.3rem 0.6rem;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--amber);
+    }
+    .plat .open[hidden] { display: none; }
+    .plat.checked .plat-name { color: var(--amber); }
+
+    .field-label {
+      display: block;
+      margin-top: 1.1rem;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .school-line {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      padding: 0.55rem 0 0.2rem;
+    }
+
+    .log-item {
+      padding: 0.85rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .log-when {
+      font-size: 0.82rem;
+      font-weight: 800;
+      color: var(--mute);
+      letter-spacing: 0.04em;
+    }
+    .log-text {
+      margin-top: 0.25rem;
+      font-size: 1.12rem;
+      font-weight: 650;
+      line-height: 1.35;
+      white-space: pre-wrap;
+    }
+    .log-hide {
+      margin-top: 0.35rem;
+      background: none;
+      border: 0;
+      color: var(--mute);
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-decoration: underline;
+      min-height: 1.8rem;
+      padding: 0;
+    }
+    .empty {
+      padding: 0.9rem 0;
+      color: var(--mute);
+      font-size: 1rem;
+      font-weight: 650;
+    }
+    .row-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      margin-top: 0.2rem;
+    }
+    .ghost {
+      background: var(--chip);
+      border: 1px solid var(--line);
+      color: var(--fg);
+    }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: max(1.4rem, env(safe-area-inset-bottom));
+      transform: translateX(-50%);
+      background: var(--fg);
+      color: var(--bg);
+      font-weight: 800;
+      font-size: 0.9rem;
+      padding: 0.55rem 0.9rem;
+      border-radius: 999px;
+      z-index: 30;
+    }
+    .toast[hidden] { display: none; }
+    .sr {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+    }
+  </style>
+</head>
+<body>
+  <main id="app">
+    <section id="screen-door" class="screen" hidden>
+      <div class="door-wrap">
+        <h1 class="door-title">The kids</h1>
+        <p class="door-hint">Enter the door code</p>
+        <p id="pin-dots" class="pin-dots" aria-live="polite"></p>
+        <p id="door-err" class="err" hidden>Try again</p>
+        <div class="pad" role="group" aria-label="Door code">
+          <button type="button" class="pad-btn" data-digit="1">1</button>
+          <button type="button" class="pad-btn" data-digit="2">2</button>
+          <button type="button" class="pad-btn" data-digit="3">3</button>
+          <button type="button" class="pad-btn" data-digit="4">4</button>
+          <button type="button" class="pad-btn" data-digit="5">5</button>
+          <button type="button" class="pad-btn" data-digit="6">6</button>
+          <button type="button" class="pad-btn" data-digit="7">7</button>
+          <button type="button" class="pad-btn" data-digit="8">8</button>
+          <button type="button" class="pad-btn" data-digit="9">9</button>
+          <button type="button" class="pad-btn pad-go" id="pin-go">Go</button>
+          <button type="button" class="pad-btn" data-digit="0">0</button>
+          <button type="button" class="pad-btn pad-del" id="pin-del" aria-label="Delete">⌫</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="screen-home" class="screen" hidden>
+      <p class="kicker">HOUSE</p>
+      <h1 class="title">The kids</h1>
+      <p class="date" id="home-date"></p>
+      <div class="banner" id="sample-banner">SAMPLE · no handles yet · type them on a name · this phone only</div>
+      <div id="kid-rows"></div>
+
+      <div class="block">
+        <p class="block-head">School mail</p>
+        <button type="button" class="check-hit" id="sch-check" aria-pressed="false">
+          <span class="box" aria-hidden="true"></span>
+          <span class="check-copy">
+            <span class="check-title">I read today’s school mail</span>
+            <span class="check-meta" id="sch-status">not yet</span>
+          </span>
+        </button>
+        <label class="sr" for="sch-note">School mail note</label>
+        <textarea class="note" id="sch-note" rows="2" placeholder="Optional note"></textarea>
+        <a class="link-out" href="https://app.schoology.com" target="_blank" rel="noopener noreferrer">Open Schoology</a>
+      </div>
+
+      <button type="button" class="giant" id="btn-log">Log</button>
+      <button type="button" class="tiny" id="btn-handle">Add handle</button>
+      <p class="foot">Not official school software. Not a tracker. You look. You mark it. Stays on this phone.</p>
+    </section>
+
+    <section id="screen-kid" class="screen" hidden>
+      <button type="button" class="back" id="kid-back">Back to the kids</button>
+      <p class="kicker">HOUSE</p>
+      <h1 class="title" id="kid-title"></h1>
+      <p class="date" id="kid-date"></p>
+      <div id="plat-list"></div>
+      <div class="school-line">
+        <button type="button" class="check-hit" id="kid-school" aria-pressed="false">
+          <span class="box" aria-hidden="true"></span>
+          <span class="check-copy">
+            <span class="check-title">School today</span>
+          </span>
+        </button>
+      </div>
+      <label class="sr" for="kid-school-note">School note</label>
+      <textarea class="note" id="kid-school-note" rows="2" placeholder="Optional note"></textarea>
+      <label class="field-label" for="kid-how">How are they</label>
+      <input class="how" id="kid-how" maxlength="240" placeholder="One line for today" autocomplete="off">
+      <p class="foot">You look. You mark it. Stays on this phone.</p>
+    </section>
+
+    <section id="screen-log" class="screen" hidden>
+      <button type="button" class="back" id="log-back">Back</button>
+      <p class="kicker">LOG</p>
+      <h1 class="title">Today’s notes</h1>
+      <p class="date" id="log-date"></p>
+      <label class="sr" for="log-text">New note</label>
+      <textarea class="composer" id="log-text" rows="4" placeholder="What you want to remember"></textarea>
+      <div class="row-actions">
+        <button type="button" class="giant" id="log-save" style="margin-top:0">Save</button>
+        <button type="button" class="ghost" id="log-copy">Copy today’s notes</button>
+      </div>
+      <div id="log-list"></div>
+      <p class="foot">Dated notes the house types. Stays on this phone.</p>
+    </section>
+  </main>
+  <div id="toast" class="toast" hidden></div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var KEY = 'kids-board-v1';
+      var OPEN = 'kids-board-v1-open';
+      var DOOR = '2851';
+      var PLATS = [
+        { id: 'ig', label: 'Instagram' },
+        { id: 'tiktok', label: 'TikTok' },
+        { id: 'snap', label: 'Snapchat' },
+        { id: 'yt', label: 'YouTube' },
+        { id: 'discord', label: 'Discord' },
+        { id: 'messages', label: 'Messages' },
+        { id: 'other', label: 'Other' }
+      ];
+
+      var pin = '';
+      var currentKid = 'james';
+      var state = load();
+
+      function $(id) { return document.getElementById(id); }
+
+      function todayKey() {
+        var n = new Date();
+        var y = n.getFullYear();
+        var m = String(n.getMonth() + 1);
+        var d = String(n.getDate());
+        if (m.length < 2) m = '0' + m;
+        if (d.length < 2) d = '0' + d;
+        return y + '-' + m + '-' + d;
+      }
+
+      function todayLabel() {
+        try {
+          return new Intl.DateTimeFormat(undefined, {
+            weekday: 'long', month: 'long', day: 'numeric'
+          }).format(new Date());
+        } catch (e) {
+          return new Date().toDateString();
+        }
+      }
+
+      function stampLocal(ms) {
+        var n = new Date(ms);
+        try {
+          var day = new Intl.DateTimeFormat(undefined, {
+            weekday: 'short', month: 'short', day: 'numeric'
+          }).format(n);
+          var time = new Intl.DateTimeFormat(undefined, {
+            hour: 'numeric', minute: '2-digit'
+          }).format(n);
+          return day + ' · ' + time;
+        } catch (e) {
+          return n.toLocaleString();
+        }
+      }
+
+      function localDateOf(ms) {
+        var n = new Date(ms);
+        var y = n.getFullYear();
+        var m = String(n.getMonth() + 1);
+        var d = String(n.getDate());
+        if (m.length < 2) m = '0' + m;
+        if (d.length < 2) d = '0' + d;
+        return y + '-' + m + '-' + d;
+      }
+
+      function clone(x) { return JSON.parse(JSON.stringify(x)); }
+
+      function emptyPlats() {
+        return PLATS.map(function (p) {
+          return { id: p.id, label: p.label, handle: '', on: '' };
+        });
+      }
+
+      function emptyKid(id, name, age) {
+        return {
+          id: id,
+          name: name,
+          age: age,
+          how: '',
+          schoolNote: '',
+          schoolOn: '',
+          howByDate: {},
+          schoolNoteByDate: {},
+          platforms: emptyPlats()
+        };
+      }
+
+      function defaults() {
+        return {
+          kids: [
+            emptyKid('james', 'James', 14),
+            emptyKid('sophia', 'Sophia', 12),
+            emptyKid('mark', 'Mark', 10)
+          ],
+          schoology: { on: '', note: '', noteByDate: {} },
+          log: []
+        };
+      }
+
+      function mergeKid(raw, id, name, age) {
+        var k = emptyKid(id, name, age);
+        if (!raw || typeof raw !== 'object') return k;
+        k.how = String(raw.how || '');
+        k.schoolNote = String(raw.schoolNote || '');
+        k.schoolOn = String(raw.schoolOn || '');
+        k.howByDate = raw.howByDate && typeof raw.howByDate === 'object' ? raw.howByDate : {};
+        k.schoolNoteByDate = raw.schoolNoteByDate && typeof raw.schoolNoteByDate === 'object' ? raw.schoolNoteByDate : {};
+        if (k.how && !k.howByDate[todayKey()] && raw.howOn === todayKey()) k.howByDate[todayKey()] = k.how;
+        var byId = {};
+        (raw.platforms || []).forEach(function (p) {
+          if (p && p.id) byId[p.id] = p;
+        });
+        k.platforms = PLATS.map(function (meta) {
+          var p = byId[meta.id] || {};
+          return {
+            id: meta.id,
+            label: meta.label,
+            handle: String(p.handle || ''),
+            on: String(p.on || '')
+          };
+        });
+        return k;
+      }
+
+      function load() {
+        var base = defaults();
+        try {
+          var raw = localStorage.getItem(KEY);
+          if (!raw) return base;
+          var parsed = JSON.parse(raw);
+          if (!parsed || typeof parsed !== 'object') return base;
+          var kidsIn = parsed.kids || [];
+          var byId = {};
+          kidsIn.forEach(function (k) { if (k && k.id) byId[k.id] = k; });
+          base.kids = [
+            mergeKid(byId.james, 'james', 'James', 14),
+            mergeKid(byId.sophia, 'sophia', 'Sophia', 12),
+            mergeKid(byId.mark, 'mark', 'Mark', 10)
+          ];
+          var s = parsed.schoology || {};
+          base.schoology = {
+            on: String(s.on || ''),
+            note: String(s.note || ''),
+            noteByDate: s.noteByDate && typeof s.noteByDate === 'object' ? s.noteByDate : {}
+          };
+          base.log = Array.isArray(parsed.log) ? parsed.log : [];
+          return base;
+        } catch (e) {
+          return defaults();
+        }
+      }
+
+      function save() {
+        try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+      }
+
+      function getKid(id) {
+        return state.kids.filter(function (k) { return k.id === id; })[0] || state.kids[0];
+      }
+
+      function hasAnyHandle() {
+        return state.kids.some(function (k) {
+          return (k.platforms || []).some(function (p) { return String(p.handle || '').trim(); });
+        });
+      }
+
+      function kidStatus(kid) {
+        var d = todayKey();
+        var plats = kid.platforms || [];
+        var n = plats.filter(function (p) { return p.on === d; }).length;
+        var tot = plats.length;
+        var school = kid.schoolOn === d;
+        if (n === tot && school && tot > 0) return { text: 'looked', cls: 'looked' };
+        var done = n + (school ? 1 : 0);
+        var denom = tot + 1;
+        if (done === 0) return { text: 'not yet', cls: 'none' };
+        return { text: done + '/' + denom + ' today', cls: 'partial' };
+      }
+
+      function stripHandle(raw) {
+        var h = String(raw || '').trim();
+        if (!h) return '';
+        if (/^https?:\/\//i.test(h)) return h;
+        return h.replace(/^@+/, '').replace(/^\/+/, '');
+      }
+
+      function profileUrl(p) {
+        var raw = String(p.handle || '').trim();
+        if (!raw) return '';
+        if (p.id === 'discord' || p.id === 'messages') return '';
+        if (p.id === 'other') {
+          return /^https?:\/\//i.test(raw) ? raw : '';
+        }
+        if (/^https?:\/\//i.test(raw)) return raw;
+        var h = stripHandle(raw);
+        if (!h) return '';
+        if (p.id === 'ig') return 'https://instagram.com/' + encodeURIComponent(h);
+        if (p.id === 'tiktok') return 'https://www.tiktok.com/@' + encodeURIComponent(h);
+        if (p.id === 'snap') return 'https://www.snapchat.com/add/' + encodeURIComponent(h);
+        if (p.id === 'yt') return 'https://www.youtube.com/@' + encodeURIComponent(h);
+        return '';
+      }
+
+      function escapeHtml(s) {
+        return String(s == null ? '' : s)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
+
+      function show(id) {
+        var screens = document.querySelectorAll('.screen');
+        for (var i = 0; i < screens.length; i++) {
+          screens[i].hidden = screens[i].id !== id;
+        }
+        window.scrollTo(0, 0);
+      }
+
+      function toast(msg) {
+        var el = $('toast');
+        el.textContent = msg;
+        el.hidden = false;
+        clearTimeout(toast._t);
+        toast._t = setTimeout(function () { el.hidden = true; }, 1600);
+      }
+
+      function renderDots() {
+        var n = pin.length;
+        var s = '';
+        for (var i = 0; i < 4; i++) s += i < n ? '•' : '○';
+        $('pin-dots').textContent = s;
+      }
+
+      function checkPin() {
+        if (!pin) return;
+        if (pin.length < DOOR.length) return;
+        if (pin === DOOR) {
+          try { sessionStorage.setItem(OPEN, '1'); } catch (e) {}
+          pin = '';
+          $('door-err').hidden = true;
+          goHome();
+          return;
+        }
+        $('door-err').hidden = false;
+        $('screen-door').classList.remove('shake');
+        void $('screen-door').offsetWidth;
+        $('screen-door').classList.add('shake');
+        pin = '';
+        renderDots();
+      }
+
+      function renderHome() {
+        $('home-date').textContent = todayLabel();
+        $('sample-banner').hidden = hasAnyHandle();
+        var d = todayKey();
+        var schOn = state.schoology.on === d;
+        $('sch-check').setAttribute('aria-pressed', schOn ? 'true' : 'false');
+        $('sch-check').classList.toggle('checked', schOn);
+        $('sch-check').querySelector('.box').textContent = schOn ? '✓' : '';
+        $('sch-status').textContent = schOn ? 'read' : 'not yet';
+        var note = (state.schoology.noteByDate && state.schoology.noteByDate[d]) || (state.schoology.on === d ? state.schoology.note : '') || '';
+        if (document.activeElement !== $('sch-note')) $('sch-note').value = note;
+        var host = $('kid-rows');
+        host.innerHTML = state.kids.map(function (k) {
+          var st = kidStatus(k);
+          return '<button type="button" class="kid-row" data-kid="' + escapeHtml(k.id) + '">' +
+            '<span class="kid-name">' + escapeHtml(k.name) + ' <em>' + escapeHtml(String(k.age)) + '</em></span>' +
+            '<span class="kid-status ' + st.cls + '">' + escapeHtml(st.text) + '</span></button>';
+        }).join('');
+      }
+
+      function goHome() {
+        renderHome();
+        show('screen-home');
+      }
+
+      function renderKid() {
+        var kid = getKid(currentKid);
+        var d = todayKey();
+        $('kid-title').textContent = kid.name + ' ' + kid.age;
+        $('kid-date').textContent = todayLabel();
+        var schoolOn = kid.schoolOn === d;
+        $('kid-school').setAttribute('aria-pressed', schoolOn ? 'true' : 'false');
+        $('kid-school').classList.toggle('checked', schoolOn);
+        $('kid-school').querySelector('.box').textContent = schoolOn ? '✓' : '';
+        var sNote = (kid.schoolNoteByDate && kid.schoolNoteByDate[d]) || (kid.schoolOn === d ? kid.schoolNote : '') || '';
+        if (document.activeElement !== $('kid-school-note')) $('kid-school-note').value = sNote;
+        var how = (kid.howByDate && kid.howByDate[d]) || (kid.howOn === d ? kid.how : '') || '';
+        if (document.activeElement !== $('kid-how')) $('kid-how').value = how;
+        $('plat-list').innerHTML = kid.platforms.map(function (p) {
+          var on = p.on === d;
+          var url = profileUrl(p);
+          var open = url
+            ? '<a class="open" href="' + escapeHtml(url) + '" target="_blank" rel="noopener noreferrer">Open</a>'
+            : '<a class="open" hidden href="#" tabindex="-1">Open</a>';
+          return '<div class="plat' + (on ? ' checked' : '') + '" data-pid="' + escapeHtml(p.id) + '">' +
+            '<button type="button" class="check-hit" data-check="' + escapeHtml(p.id) + '" aria-pressed="' + (on ? 'true' : 'false') + '" aria-label="Looked today, ' + escapeHtml(p.label) + '">' +
+            '<span class="box" aria-hidden="true">' + (on ? '✓' : '') + '</span></button>' +
+            '<span class="plat-name">' + escapeHtml(p.label) + '</span>' +
+            open +
+            '<input class="handle" data-handle="' + escapeHtml(p.id) + '" placeholder="add handle" autocomplete="off" spellcheck="false" value="' + escapeHtml(p.handle) + '">' +
+            '</div>';
+        }).join('');
+      }
+
+      function openKid(id) {
+        currentKid = id;
+        renderKid();
+        show('screen-kid');
+      }
+
+      function renderLog() {
+        $('log-date').textContent = todayLabel();
+        var items = (state.log || []).filter(function (it) { return it && !it.gone; });
+        var host = $('log-list');
+        if (!items.length) {
+          host.innerHTML = '<p class="empty">Nothing yet.</p>';
+          return;
+        }
+        host.innerHTML = items.map(function (it) {
+          return '<div class="log-item" data-id="' + escapeHtml(it.id) + '">' +
+            '<div class="log-when">' + escapeHtml(stampLocal(it.at)) + '</div>' +
+            '<div class="log-text">' + escapeHtml(it.text) + '</div>' +
+            '<button type="button" class="log-hide" data-hide="' + escapeHtml(it.id) + '">Hide</button>' +
+            '</div>';
+        }).join('');
+      }
+
+      function goLog() {
+        renderLog();
+        show('screen-log');
+      }
+
+      function todaysNoteText() {
+        var d = todayKey();
+        return (state.log || []).filter(function (it) {
+          return it && !it.gone && localDateOf(it.at) === d;
+        }).map(function (it) {
+          return stampLocal(it.at) + '\n' + it.text;
+        }).join('\n\n');
+      }
+
+      function copyToday() {
+        var text = todaysNoteText();
+        if (!text) {
+          toast('Nothing today');
+          return;
+        }
+        function ok() { toast('Copied'); }
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(ok).catch(fallback);
+        } else {
+          fallback();
+        }
+        function fallback() {
+          var ta = document.createElement('textarea');
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          try { document.execCommand('copy'); ok(); } catch (e) { toast('Copy failed'); }
+          document.body.removeChild(ta);
+        }
+      }
+
+      function bind() {
+        document.querySelectorAll('[data-digit]').forEach(function (btn) {
+          btn.addEventListener('click', function () {
+            $('door-err').hidden = true;
+            if (pin.length >= 4) return;
+            pin += btn.getAttribute('data-digit');
+            renderDots();
+            if (pin.length === 4) checkPin();
+          });
+        });
+        $('pin-del').addEventListener('click', function () {
+          pin = pin.slice(0, -1);
+          $('door-err').hidden = true;
+          renderDots();
+        });
+        $('pin-go').addEventListener('click', checkPin);
+
+        $('kid-rows').addEventListener('click', function (ev) {
+          var btn = ev.target.closest('[data-kid]');
+          if (!btn) return;
+          openKid(btn.getAttribute('data-kid'));
+        });
+
+        $('sch-check').addEventListener('click', function () {
+          var d = todayKey();
+          state.schoology.on = state.schoology.on === d ? '' : d;
+          save();
+          renderHome();
+        });
+        $('sch-note').addEventListener('input', function () {
+          var d = todayKey();
+          if (!state.schoology.noteByDate) state.schoology.noteByDate = {};
+          state.schoology.noteByDate[d] = $('sch-note').value;
+          state.schoology.note = $('sch-note').value;
+          save();
+        });
+
+        $('btn-log').addEventListener('click', goLog);
+        $('btn-handle').addEventListener('click', function () {
+          var hit = state.kids.filter(function (k) {
+            return !(k.platforms || []).some(function (p) { return String(p.handle || '').trim(); });
+          })[0] || state.kids[0];
+          openKid(hit.id);
+        });
+
+        $('kid-back').addEventListener('click', goHome);
+        $('log-back').addEventListener('click', goHome);
+
+        $('plat-list').addEventListener('click', function (ev) {
+          var btn = ev.target.closest('[data-check]');
+          if (!btn) return;
+          var kid = getKid(currentKid);
+          var pid = btn.getAttribute('data-check');
+          var p = kid.platforms.filter(function (x) { return x.id === pid; })[0];
+          if (!p) return;
+          var d = todayKey();
+          p.on = p.on === d ? '' : d;
+          save();
+          renderKid();
+        });
+        $('plat-list').addEventListener('input', function (ev) {
+          var inp = ev.target.closest('[data-handle]');
+          if (!inp) return;
+          var kid = getKid(currentKid);
+          var pid = inp.getAttribute('data-handle');
+          var p = kid.platforms.filter(function (x) { return x.id === pid; })[0];
+          if (!p) return;
+          p.handle = inp.value;
+          save();
+          var row = inp.closest('.plat');
+          var a = row && row.querySelector('.open');
+          if (a) {
+            var url = profileUrl(p);
+            if (url) {
+              a.hidden = false;
+              a.href = url;
+              a.removeAttribute('tabindex');
+            } else {
+              a.hidden = true;
+              a.href = '#';
+              a.setAttribute('tabindex', '-1');
+            }
+          }
+        });
+
+        $('kid-school').addEventListener('click', function () {
+          var kid = getKid(currentKid);
+          var d = todayKey();
+          kid.schoolOn = kid.schoolOn === d ? '' : d;
+          save();
+          renderKid();
+        });
+        $('kid-school-note').addEventListener('input', function () {
+          var kid = getKid(currentKid);
+          var d = todayKey();
+          if (!kid.schoolNoteByDate) kid.schoolNoteByDate = {};
+          kid.schoolNoteByDate[d] = $('kid-school-note').value;
+          kid.schoolNote = $('kid-school-note').value;
+          save();
+        });
+        $('kid-how').addEventListener('input', function () {
+          var kid = getKid(currentKid);
+          var d = todayKey();
+          if (!kid.howByDate) kid.howByDate = {};
+          kid.howByDate[d] = $('kid-how').value;
+          kid.how = $('kid-how').value;
+          save();
+        });
+
+        $('log-save').addEventListener('click', function () {
+          var text = ($('log-text').value || '').trim();
+          if (!text) return;
+          state.log.unshift({
+            id: 'n-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+            at: Date.now(),
+            text: text,
+            gone: false
+          });
+          if (state.log.length > 200) state.log = state.log.slice(0, 200);
+          $('log-text').value = '';
+          save();
+          renderLog();
+        });
+        $('log-copy').addEventListener('click', copyToday);
+        $('log-list').addEventListener('click', function (ev) {
+          var btn = ev.target.closest('[data-hide]');
+          if (!btn) return;
+          var id = btn.getAttribute('data-hide');
+          state.log.forEach(function (it) {
+            if (it.id === id) it.gone = true;
+          });
+          save();
+          renderLog();
+        });
+      }
+
+      function start() {
+        bind();
+        renderDots();
+        var open = false;
+        try { open = sessionStorage.getItem(OPEN) === '1'; } catch (e) {}
+        if (open) goHome();
+        else show('screen-door');
+        if ('serviceWorker' in navigator) {
+          navigator.serviceWorker.register('./sw.js').catch(function () {});
+        }
+      }
+
+      start();
+    })();
+  </script>
+</body>
+</html>
