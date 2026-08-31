@@ -1,5 +1,5 @@
 /* The kids board. Same-origin only. Cache name is the version. */
-const CACHE = 'kids-board-v1';
+const CACHE = 'kids-board-v2';
 const SHELL = [
   './',
   './index.html',
