@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-title" content="The kids">
   <meta name="description" content="House board. You look. You mark it. Stays on this phone.">
   <title>The kids</title>
-  <!-- kids-board-v1 -->
+  <!-- kids-board-v2 -->
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="./icon-192.png">
@@ -174,6 +174,21 @@
       font-weight: 800;
       letter-spacing: -0.02em;
       margin-left: 0.25rem;
+    }
+    .kid-nick {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--amber);
+      letter-spacing: 0.01em;
+      margin-top: 0.12rem;
+    }
+    .kid-kicker {
+      display: block;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--amber);
+      margin-top: 0.15rem;
     }
     .kid-status {
       flex: 0 0 auto;
@@ -405,6 +420,49 @@
       font-size: 1rem;
       font-weight: 650;
     }
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      margin: 0.35rem 0 0.55rem;
+    }
+    .chip {
+      min-height: 2.4rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      background: var(--chip);
+      border: 1px solid var(--line);
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+    .chip.on {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: var(--bg);
+    }
+    .con-item {
+      padding: 0.9rem 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .con-name {
+      font-size: 1.35rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+    .con-meta {
+      margin-top: 0.15rem;
+      color: var(--mute);
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+    .con-call {
+      display: inline-block;
+      margin-top: 0.35rem;
+      color: var(--amber);
+      font-weight: 800;
+      text-decoration: none;
+      border-bottom: 1px solid var(--amber);
+    }
     .row-actions {
       display: flex;
       flex-wrap: wrap;
@@ -486,6 +544,7 @@
       </div>
 
       <button type="button" class="giant" id="btn-log">Log</button>
+      <button type="button" class="giant" id="btn-contacts">Contacts</button>
       <button type="button" class="tiny" id="btn-handle">Add handle</button>
       <p class="foot">Not official school software. Not a tracker. You look. You mark it. Stays on this phone.</p>
     </section>
@@ -508,6 +567,10 @@
       <textarea class="note" id="kid-school-note" rows="2" placeholder="Optional note"></textarea>
       <label class="field-label" for="kid-how">How are they</label>
       <input class="how" id="kid-how" maxlength="240" placeholder="One line for today" autocomplete="off">
+      <div class="block" id="kid-people-block">
+        <p class="block-head">Their people</p>
+        <div id="kid-people"></div>
+      </div>
       <p class="foot">You look. You mark it. Stays on this phone.</p>
     </section>
 
@@ -524,6 +587,33 @@
       </div>
       <div id="log-list"></div>
       <p class="foot">Dated notes the house types. Stays on this phone.</p>
+    </section>
+
+    <section id="screen-contacts" class="screen" hidden>
+      <button type="button" class="back" id="con-back">Back</button>
+      <p class="kicker">HOUSE</p>
+      <h1 class="title">Contacts</h1>
+      <p class="date" id="con-date"></p>
+      <label class="field-label" for="con-name">Name</label>
+      <input class="how" id="con-name" maxlength="80" placeholder="Name" autocomplete="name">
+      <p class="field-label">What they are</p>
+      <div class="chips" id="con-roles">
+        <button type="button" class="chip on" data-role="Coach">Coach</button>
+        <button type="button" class="chip" data-role="Teacher">Teacher</button>
+        <button type="button" class="chip" data-role="Mentor">Mentor</button>
+        <button type="button" class="chip" data-role="Other">Other</button>
+      </div>
+      <label class="sr" for="con-role">Role</label>
+      <input class="how" id="con-role" maxlength="60" placeholder="Coach, this teacher…" autocomplete="off" value="Coach">
+      <p class="field-label">For which kid</p>
+      <div class="chips" id="con-kids"></div>
+      <label class="field-label" for="con-phone">Phone</label>
+      <input class="how" id="con-phone" maxlength="40" placeholder="Optional" inputmode="tel" autocomplete="tel">
+      <button type="button" class="giant" id="con-save">Add contact</button>
+      <p class="block-head" style="margin-top:1.3rem">On this phone</p>
+      <div class="chips" id="con-filter"></div>
+      <div id="con-list"></div>
+      <p class="foot">Teachers, coaches, mentors. Stays on this phone.</p>
     </section>
   </main>
   <div id="toast" class="toast" hidden></div>
@@ -604,11 +694,12 @@
         });
       }
 
-      function emptyKid(id, name, age) {
+      function emptyKid(id, name, age, nick) {
         return {
           id: id,
           name: name,
           age: age,
+          nick: nick || '',
           how: '',
           schoolNote: '',
           schoolOn: '',
@@ -622,16 +713,17 @@
         return {
           kids: [
             emptyKid('james', 'James', 14),
-            emptyKid('sophia', 'Sophia', 12),
-            emptyKid('mark', 'Mark', 10)
+            emptyKid('sofia', 'Sofia', 12, 'little princess'),
+            emptyKid('mark', 'Mark', 9)
           ],
           schoology: { on: '', note: '', noteByDate: {} },
-          log: []
+          log: [],
+          contacts: []
         };
       }
 
-      function mergeKid(raw, id, name, age) {
-        var k = emptyKid(id, name, age);
+      function mergeKid(raw, id, name, age, nick) {
+        var k = emptyKid(id, name, age, nick);
         if (!raw || typeof raw !== 'object') return k;
         k.how = String(raw.how || '');
         k.schoolNote = String(raw.schoolNote || '');
@@ -667,8 +759,8 @@
           kidsIn.forEach(function (k) { if (k && k.id) byId[k.id] = k; });
           base.kids = [
             mergeKid(byId.james, 'james', 'James', 14),
-            mergeKid(byId.sophia, 'sophia', 'Sophia', 12),
-            mergeKid(byId.mark, 'mark', 'Mark', 10)
+            mergeKid(byId.sofia || byId.sophia, 'sofia', 'Sofia', 12, 'little princess'),
+            mergeKid(byId.mark, 'mark', 'Mark', 9)
           ];
           var s = parsed.schoology || {};
           base.schoology = {
@@ -677,6 +769,7 @@
             noteByDate: s.noteByDate && typeof s.noteByDate === 'object' ? s.noteByDate : {}
           };
           base.log = Array.isArray(parsed.log) ? parsed.log : [];
+          base.contacts = Array.isArray(parsed.contacts) ? parsed.contacts : [];
           return base;
         } catch (e) {
           return defaults();
@@ -796,7 +889,9 @@
         host.innerHTML = state.kids.map(function (k) {
           var st = kidStatus(k);
           return '<button type="button" class="kid-row" data-kid="' + escapeHtml(k.id) + '">' +
-            '<span class="kid-name">' + escapeHtml(k.name) + ' <em>' + escapeHtml(String(k.age)) + '</em></span>' +
+            '<span class="kid-name">' + escapeHtml(k.name) + ' <em>' + escapeHtml(String(k.age)) + '</em>' +
+            (k.nick ? '<span class="kid-nick">' + escapeHtml(k.nick) + '</span>' : '') +
+            '</span>' +
             '<span class="kid-status ' + st.cls + '">' + escapeHtml(st.text) + '</span></button>';
         }).join('');
       }
@@ -809,7 +904,9 @@
       function renderKid() {
         var kid = getKid(currentKid);
         var d = todayKey();
-        $('kid-title').textContent = kid.name + ' ' + kid.age;
+        $('kid-title').innerHTML = escapeHtml(kid.name) + ' ' + escapeHtml(String(kid.age)) +
+          (kid.nick ? '<span class="kid-kicker">' + escapeHtml(kid.nick) + '</span>' : '');
+        renderKidPeople(kid);
         $('kid-date').textContent = todayLabel();
         var schoolOn = kid.schoolOn === d;
         $('kid-school').setAttribute('aria-pressed', schoolOn ? 'true' : 'false');
@@ -856,6 +953,100 @@
             '<button type="button" class="log-hide" data-hide="' + escapeHtml(it.id) + '">Hide</button>' +
             '</div>';
         }).join('');
+      }
+
+      var conKid = 'sofia';
+      var conFilter = 'all';
+      var ROLES = ['Coach', 'Teacher', 'Mentor', 'Other'];
+
+      function kidLabel(id) {
+        if (id === 'house') return 'House';
+        var k = state.kids.filter(function (x) { return x.id === id; })[0];
+        return k ? k.name : 'House';
+      }
+
+      function liveContacts() {
+        return (state.contacts || []).filter(function (c) { return c && !c.gone; });
+      }
+
+      function telHref(raw) {
+        var d = String(raw || '').replace(/[^\d+]/g, '');
+        if (!d) return '';
+        return 'tel:' + d;
+      }
+
+      function renderKidPeople(kid) {
+        var host = $('kid-people');
+        var list = liveContacts().filter(function (c) {
+          return c.kidId === kid.id || c.kidId === 'house';
+        });
+        if (!list.length) {
+          host.innerHTML = '<p class="empty">No coaches or teachers yet. Add them in Contacts.</p>';
+          return;
+        }
+        host.innerHTML = list.map(contactCard).join('');
+      }
+
+      function contactCard(c) {
+        var tel = telHref(c.phone);
+        var call = tel
+          ? '<a class="con-call" href="' + escapeHtml(tel) + '">Call</a>'
+          : '';
+        return '<div class="con-item" data-cid="' + escapeHtml(c.id) + '">' +
+          '<div class="con-name">' + escapeHtml(c.name) + '</div>' +
+          '<div class="con-meta">' + escapeHtml(c.role || '') + ' · ' + escapeHtml(kidLabel(c.kidId)) + '</div>' +
+          call +
+          '<button type="button" class="log-hide" data-hide-con="' + escapeHtml(c.id) + '">Hide</button>' +
+          '</div>';
+      }
+
+      function renderConKids() {
+        var ids = state.kids.map(function (k) { return k.id; }).concat(['house']);
+        $('con-kids').innerHTML = ids.map(function (id) {
+          var on = conKid === id ? ' on' : '';
+          return '<button type="button" class="chip' + on + '" data-con-kid="' + escapeHtml(id) + '">' +
+            escapeHtml(kidLabel(id)) + '</button>';
+        }).join('');
+      }
+
+      function renderConFilter() {
+        var opts = [{ id: 'all', label: 'All' }].concat(
+          state.kids.map(function (k) { return { id: k.id, label: k.name }; }),
+          [{ id: 'house', label: 'House' }]
+        );
+        $('con-filter').innerHTML = opts.map(function (o) {
+          var on = conFilter === o.id ? ' on' : '';
+          return '<button type="button" class="chip' + on + '" data-con-filter="' + escapeHtml(o.id) + '">' +
+            escapeHtml(o.label) + '</button>';
+        }).join('');
+      }
+
+      function renderContacts() {
+        $('con-date').textContent = todayLabel();
+        renderConKids();
+        renderConFilter();
+        var list = liveContacts().filter(function (c) {
+          if (conFilter === 'all') return true;
+          return c.kidId === conFilter;
+        });
+        var host = $('con-list');
+        if (!list.length) {
+          host.innerHTML = '<p class="empty">Nobody yet. Add a coach or teacher above.</p>';
+          return;
+        }
+        host.innerHTML = list.map(contactCard).join('');
+      }
+
+      function goContacts() {
+        renderContacts();
+        show('screen-contacts');
+      }
+
+      function hideContact(id) {
+        (state.contacts || []).forEach(function (c) {
+          if (c.id === id) c.gone = true;
+        });
+        save();
       }
 
       function goLog() {
@@ -932,6 +1123,7 @@
         });
 
         $('btn-log').addEventListener('click', goLog);
+        $('btn-contacts').addEventListener('click', goContacts);
         $('btn-handle').addEventListener('click', function () {
           var hit = state.kids.filter(function (k) {
             return !(k.platforms || []).some(function (p) { return String(p.handle || '').trim(); });
@@ -941,6 +1133,65 @@
 
         $('kid-back').addEventListener('click', goHome);
         $('log-back').addEventListener('click', goHome);
+        $('con-back').addEventListener('click', goHome);
+
+        $('con-roles').addEventListener('click', function (ev) {
+          var btn = ev.target.closest('[data-role]');
+          if (!btn) return;
+          var role = btn.getAttribute('data-role');
+          var chips = $('con-roles').querySelectorAll('.chip');
+          for (var i = 0; i < chips.length; i++) chips[i].classList.toggle('on', chips[i] === btn);
+          $('con-role').value = role === 'Other' ? '' : role;
+          if (role === 'Other') $('con-role').focus();
+        });
+        $('con-kids').addEventListener('click', function (ev) {
+          var btn = ev.target.closest('[data-con-kid]');
+          if (!btn) return;
+          conKid = btn.getAttribute('data-con-kid');
+          renderConKids();
+        });
+        $('con-filter').addEventListener('click', function (ev) {
+          var btn = ev.target.closest('[data-con-filter]');
+          if (!btn) return;
+          conFilter = btn.getAttribute('data-con-filter');
+          renderContacts();
+        });
+        $('con-save').addEventListener('click', function () {
+          var name = ($('con-name').value || '').trim();
+          var role = ($('con-role').value || '').trim() || 'Coach';
+          var phone = ($('con-phone').value || '').trim();
+          if (!name) {
+            toast('Need a name');
+            return;
+          }
+          if (!state.contacts) state.contacts = [];
+          state.contacts.unshift({
+            id: 'c-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+            name: name,
+            role: role,
+            kidId: conKid || 'house',
+            phone: phone,
+            gone: false
+          });
+          if (state.contacts.length > 200) state.contacts = state.contacts.slice(0, 200);
+          $('con-name').value = '';
+          $('con-phone').value = '';
+          save();
+          renderContacts();
+          toast('Saved');
+        });
+        $('con-list').addEventListener('click', function (ev) {
+          var btn = ev.target.closest('[data-hide-con]');
+          if (!btn) return;
+          hideContact(btn.getAttribute('data-hide-con'));
+          renderContacts();
+        });
+        $('kid-people').addEventListener('click', function (ev) {
+          var btn = ev.target.closest('[data-hide-con]');
+          if (!btn) return;
+          hideContact(btn.getAttribute('data-hide-con'));
+          renderKid();
+        });
 
         $('plat-list').addEventListener('click', function (ev) {
           var btn = ev.target.closest('[data-check]');
