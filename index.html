@@ -624,7 +624,10 @@
 
       var KEY = 'kids-board-v1';
       var OPEN = 'kids-board-v1-open';
-      var DOOR = '2851';
+      // Door PIN rotated 2026-10-24. Cleartext PIN is NOT in this public build.
+      // Private note for Dad/Knox only (box-local, not in repo).
+      // Public Pages stay locked until a private/gated check is deployed.
+      var DOOR = null;
       var PLATS = [
         { id: 'ig', label: 'Instagram' },
         { id: 'tiktok', label: 'TikTok' },
@@ -712,9 +715,9 @@
       function defaults() {
         return {
           kids: [
-            emptyKid('james', 'James', 14),
-            emptyKid('sofia', 'Sofia', 12, 'little princess'),
-            emptyKid('mark', 'Mark', 9)
+            emptyKid('james', 'James', null),
+            emptyKid('sofia', 'Sofia', null, 'little princess'),
+            emptyKid('mark', 'Mark', null)
           ],
           schoology: { on: '', note: '', noteByDate: {} },
           log: [],
@@ -758,9 +761,9 @@
           var byId = {};
           kidsIn.forEach(function (k) { if (k && k.id) byId[k.id] = k; });
           base.kids = [
-            mergeKid(byId.james, 'james', 'James', 14),
-            mergeKid(byId.sofia || byId.sophia, 'sofia', 'Sofia', 12, 'little princess'),
-            mergeKid(byId.mark, 'mark', 'Mark', 9)
+            mergeKid(byId.james, 'james', 'James', null),
+            mergeKid(byId.sofia || byId.sophia, 'sofia', 'Sofia', null, 'little princess'),
+            mergeKid(byId.mark, 'mark', 'Mark', null)
           ];
           var s = parsed.schoology || {};
           base.schoology = {
@@ -858,6 +861,14 @@
 
       function checkPin() {
         if (!pin) return;
+        // Public build: no working PIN shipped. Door stays closed.
+        if (!DOOR || typeof DOOR !== 'string' || !DOOR.length) {
+          $('door-err').hidden = false;
+          $('door-err').textContent = 'Door locked — ask Dad.';
+          pin = '';
+          $('door-pin').textContent = '';
+          return;
+        }
         if (pin.length < DOOR.length) return;
         if (pin === DOOR) {
           try { sessionStorage.setItem(OPEN, '1'); } catch (e) {}
@@ -889,7 +900,8 @@
         host.innerHTML = state.kids.map(function (k) {
           var st = kidStatus(k);
           return '<button type="button" class="kid-row" data-kid="' + escapeHtml(k.id) + '">' +
-            '<span class="kid-name">' + escapeHtml(k.name) + ' <em>' + escapeHtml(String(k.age)) + '</em>' +
+            '<span class="kid-name">' + escapeHtml(k.name) +
+            (k.age != null && k.age !== '' ? ' <em>' + escapeHtml(String(k.age)) + '</em>' : '') +
             (k.nick ? '<span class="kid-nick">' + escapeHtml(k.nick) + '</span>' : '') +
             '</span>' +
             '<span class="kid-status ' + st.cls + '">' + escapeHtml(st.text) + '</span></button>';
@@ -904,7 +916,8 @@
       function renderKid() {
         var kid = getKid(currentKid);
         var d = todayKey();
-        $('kid-title').innerHTML = escapeHtml(kid.name) + ' ' + escapeHtml(String(kid.age)) +
+        $('kid-title').innerHTML = escapeHtml(kid.name) +
+          (kid.age != null && kid.age !== '' ? ' ' + escapeHtml(String(kid.age)) : '') +
           (kid.nick ? '<span class="kid-kicker">' + escapeHtml(kid.nick) + '</span>' : '');
         renderKidPeople(kid);
         $('kid-date').textContent = todayLabel();
