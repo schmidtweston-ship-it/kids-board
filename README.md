@@ -1,5 +1,10 @@
-# The kids
+# Kids board
 
-Family house board. Social handles and today’s notes live in this phone’s localStorage — never in the repo. SAMPLE until you type a handle. You look. You mark it. Not a tracker. Not school software.
+Family kids check-in board (Schmidt House). Soft Mom. Equal always.
 
-Live: https://schmidtweston-ship-it.github.io/kids-board/
+## Security (2026-10-24)
+- Door PIN is **not** shipped in this public build. Door stays locked on GitHub Pages.
+- Real ages are **not** seeded in public source. Dad must explicitly call wider before ages return.
+- Private door note lives box-local only (not in this repo).
+
+GitHub Pages on `main` / root.
